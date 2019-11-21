@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>ClientCredentialsAuthProvider</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>ClientCredentials</members>
+        <name>AuthProvider</name>
+    </types>
+    <types>
+        <members>ClientCredentials_Metadata__mdt.Auth_Provider__c</members>
+        <members>ClientCredentials_Metadata__mdt.Client_ID__c</members>
+        <members>ClientCredentials_Metadata__mdt.Client_Secret__c</members>
+        <members>ClientCredentials_Metadata__mdt.Access_Token_URL__c</members>
+        <members>ClientCredentials_Metadata__mdt.User_Name__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>ClientCredentials_Metadata.ClientCredentials</members>
+        <name>CustomMetadata</name>
+    </types>
+    <types>
+        <members>ClientCredentials_Metadata__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>ClientCredentials_Metadata__mdt-ClientCredentials_Metadata Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>clientCredentials</members>
+        <name>RemoteSiteSetting</name>
+    </types>
+    <types>
+        <members>ClientCredentials</members>
+        <name>NamedCredential</name>
+    </types>
+    <version>47.0</version>
+</Package>
