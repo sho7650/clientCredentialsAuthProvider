@@ -7,6 +7,7 @@ public class ClientCredentialsAuthProviderTest {
   private static final String CLIENT_ID = 'testID';
   private static final String CLIENT_SECRET ='testSecret';
   private static final String USER_NAME = 'test@example.com';
+  private static final String TOKEN_TYPE = 'Bearer';
 
   private static final String STATE_TO_PROPOGATE = 'testState';
   private static final String ACCESS_TOKEN = 'thisIsTestAccessToken';
@@ -15,7 +16,7 @@ public class ClientCredentialsAuthProviderTest {
   private static final String correctJsonToken = '{'+
 '  \"token_type\" : \"Bearer\",'+
 '  \"access_token\" : \"thisIsTestAccessToken\",'+
-'  \"expires_in\" : \"3599\",'+
+'  \"expires_in\" : \"3599\"'+
 '}';
 
   @isTest static void getCustomMetadataTypeTest() {
@@ -48,7 +49,39 @@ public class ClientCredentialsAuthProviderTest {
     System.assertEquals(expectedUrl.getParameters().get('state'), actualUrl.getParameters().get('state'));
   }
 
-  // todo: create httpMockService and assert UserInfo
+  @isTest static void handleCallbackTest() {
+    final Map<String,String> authProviderConfiguration = setupAuthProviderConfig();
+    final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
+
+    Test.setMock(HttpCalloutMock.class, new ClientCredentialsMockService() );
+
+    final Map<String, String> queryParameters = new Map<String, String>();
+    queryParameters.put('state', STATE);
+
+    final Auth.AuthProviderCallbackState callbackState = new Auth.AuthProviderCallbackState(null, null, queryParameters);
+    final Auth.AuthProviderTokenResponse actualAuthProviderTokenResponse = provider.handleCallback(authProviderConfiguration, callbackState);
+    final Auth.AuthProviderTokenResponse expectedAuthProviderTokenResponse = new Auth.AuthProviderTokenResponse(PROVIDER_NAME, ACCESS_TOKEN, 'refreshToken', STATE);
+
+    System.assertEquals(expectedAuthProviderTokenResponse.provider, actualAuthProviderTokenResponse.provider);
+    System.assertEquals(expectedAuthProviderTokenResponse.oauthToken, actualAuthProviderTokenResponse.oauthToken);
+    System.assertEquals(expectedAuthProviderTokenResponse.oauthSecretOrRefreshToken, actualAuthProviderTokenResponse.oauthSecretOrRefreshToken);
+    System.assertEquals(expectedAuthProviderTokenResponse.state, actualAuthProviderTokenResponse.state);
+  }
+
+  @isTest static void refreshTest() {
+    final Map<String,String> authProviderConfiguration = setupAuthProviderConfig();
+    final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
+
+    Test.setMock(HttpCalloutMock.class, new ClientCredentialsMockService() );
+
+    final Auth.OAuthRefreshResult actual = provider.refresh(authProviderConfiguration, 'refreshToken');
+    final Auth.OAuthRefreshResult expected = new Auth.OAuthRefreshResult(ACCESS_TOKEN, TOKEN_TYPE);
+
+    System.assertEquals(expected.accessToken, actual.accessToken);
+    System.assertEquals(expected.refreshToken, actual.refreshToken);
+    System.assertEquals(expected.error, actual.error);
+  }
+
   @isTest static void getUserInfoTest() {
     final Map<String,String> authProviderConfiguration = setupAuthProviderConfig();
     final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
@@ -80,5 +113,18 @@ public class ClientCredentialsAuthProviderTest {
     System.assertEquals(expectedUserData.provider, actualUserData.provider);
     System.assertEquals(expectedUserData.siteLoginUrl, actualUserData.siteLoginUrl);
 
+  }
+
+  public class ClientCredentialsMockService implements HttpCalloutMock {
+
+    public HTTPResponse respond(HTTPRequest req) {
+      HttpResponse res = new HttpResponse();
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setBody(correctJsonToken);
+      res.setStatusCode(200);
+
+      return res;
+    }
   }
 }
