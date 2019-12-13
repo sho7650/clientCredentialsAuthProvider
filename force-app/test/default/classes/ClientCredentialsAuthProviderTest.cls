@@ -14,10 +14,17 @@ public class ClientCredentialsAuthProviderTest {
   private static final String STATE = 'testState';
 
   private static final String correctJsonToken = '{'+
-'  \"token_type\" : \"Bearer\",'+
-'  \"access_token\" : \"thisIsTestAccessToken\",'+
-'  \"expires_in\" : \"3599\"'+
+'  \"token_type\": \"Bearer\",'+
+'  \"access_token\": \"thisIsTestAccessToken\",'+
+'  \"expires_in\": \"3599\"'+
 '}';
+  private static final String incorrectJsonToken = '{'+
+  '  \"error\": \"invalid_request\",'+
+  '  \"error_description\": \"error description\",'+
+  '  \"error_uri\": \"see at https://example.com/\"'+
+  '}';
+  private static final Integer correctStatusCode = 200;
+  private static final Integer invalidStatusCode = 400;
 
   @isTest static void getCustomMetadataTypeTest() {
     final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
@@ -49,11 +56,12 @@ public class ClientCredentialsAuthProviderTest {
     System.assertEquals(expectedUrl.getParameters().get('state'), actualUrl.getParameters().get('state'));
   }
 
+  // handle callback test - positive
   @isTest static void handleCallbackTest() {
     final Map<String,String> authProviderConfiguration = setupAuthProviderConfig();
     final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
 
-    Test.setMock(HttpCalloutMock.class, new ClientCredentialsMockService() );
+    Test.setMock(HttpCalloutMock.class, new ClientCredentialsMockService(correctJsonToken, correctStatusCode));
 
     final Map<String, String> queryParameters = new Map<String, String>();
     queryParameters.put('state', STATE);
@@ -68,11 +76,30 @@ public class ClientCredentialsAuthProviderTest {
     System.assertEquals(expectedAuthProviderTokenResponse.state, actualAuthProviderTokenResponse.state);
   }
 
+  // handle callback test - negative
+  @isTest static void handleCallbackErrorTest() {
+    final Map<String,String> authProviderConfiguration = setupAuthProviderConfig();
+    final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
+
+    Test.setMock(HttpCalloutMock.class, new ClientCredentialsMockService(incorrectJsonToken, invalidStatusCode) );
+
+    final Map<String, String> queryParameters = new Map<String, String>();
+    queryParameters.put('state', STATE);
+
+    final Auth.AuthProviderCallbackState callbackState = new Auth.AuthProviderCallbackState(null, null, queryParameters);
+    try {
+      final Auth.AuthProviderTokenResponse actualAuthProviderTokenResponse = provider.handleCallback(authProviderConfiguration, callbackState);
+      System.Assert(false);
+    } catch (ClientCredentialsAuthProvider.TokenException e) {
+      System.assertEquals('invalid_request', e.getMessage());
+    }
+
+  }
   @isTest static void refreshTest() {
     final Map<String,String> authProviderConfiguration = setupAuthProviderConfig();
     final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
 
-    Test.setMock(HttpCalloutMock.class, new ClientCredentialsMockService() );
+    Test.setMock(HttpCalloutMock.class, new ClientCredentialsMockService(correctJsonToken, correctStatusCode));
 
     final Auth.OAuthRefreshResult actual = provider.refresh(authProviderConfiguration, 'refreshToken');
     final Auth.OAuthRefreshResult expected = new Auth.OAuthRefreshResult(ACCESS_TOKEN, TOKEN_TYPE);
@@ -104,25 +131,31 @@ public class ClientCredentialsAuthProviderTest {
     );
 
     System.assertNotEquals(actualUserData,null);
-    System.assertEquals(expectedUserData.firstName, actualUserData.firstName);
-    System.assertEquals(expectedUserData.lastName, actualUserData.lastName);
-    System.assertEquals(expectedUserData.fullName, actualUserData.fullName);
-    System.assertEquals(expectedUserData.email, actualUserData.email);
-    System.assertEquals(expectedUserData.username, actualUserData.username);
-    System.assertEquals(expectedUserData.locale, actualUserData.locale);
-    System.assertEquals(expectedUserData.provider, actualUserData.provider);
-    System.assertEquals(expectedUserData.siteLoginUrl, actualUserData.siteLoginUrl);
-
+    System.assertEquals(expectedUserData.firstName,     actualUserData.firstName);
+    System.assertEquals(expectedUserData.lastName,      actualUserData.lastName);
+    System.assertEquals(expectedUserData.fullName,      actualUserData.fullName);
+    System.assertEquals(expectedUserData.email,         actualUserData.email);
+    System.assertEquals(expectedUserData.username,      actualUserData.username);
+    System.assertEquals(expectedUserData.locale,        actualUserData.locale);
+    System.assertEquals(expectedUserData.provider,      actualUserData.provider);
+    System.assertEquals(expectedUserData.siteLoginUrl,  actualUserData.siteLoginUrl);
   }
 
   public class ClientCredentialsMockService implements HttpCalloutMock {
+    String jsonResponse;
+    Integer statusCode;
+
+    public ClientCredentialsMockService(String json, Integer code) {
+      this.jsonResponse = json;
+      this.statusCode = code;
+    }
 
     public HTTPResponse respond(HTTPRequest req) {
       HttpResponse res = new HttpResponse();
 
       res.setHeader('Content-Type', 'application/json');
-      res.setBody(correctJsonToken);
-      res.setStatusCode(200);
+      res.setBody(jsonResponse);
+      res.setStatusCode(StatusCode);
 
       return res;
     }

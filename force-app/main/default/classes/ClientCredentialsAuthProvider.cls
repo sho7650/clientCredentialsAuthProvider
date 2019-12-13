@@ -1,6 +1,8 @@
 global class ClientCredentialsAuthProvider extends Auth.AuthProviderPluginClass {
+    // define
     public static final String CUSTOM_MDT_NAME = 'ClientCredentials_Metadata__mdt';
     public static final String CALLBACK_URL = '/services/authcallback/';
+    public static final String GRANT_TYPE = 'client_credentials';
 
     public static final String CMDT_FIELD_PROVIDER_NAME = 'Auth_provider__c';
     public static final String CMDT_FIELD_ACCESS_TOKEN_URL = 'Access_Token_URL__c';
@@ -8,10 +10,24 @@ global class ClientCredentialsAuthProvider extends Auth.AuthProviderPluginClass 
     public static final String CMDT_FIELD_CLIENT_SECRET = 'Client_Secret__c';
     public static final String CMDT_FIELD_USER_NAME = 'User_Name__c';
 
+    // access token response
     private class TokenResponse {
-        public String access_token;
-        public String token_type;
-        public Long expires_in;
+        public String access_token;     //required
+        public String token_type;       //required
+        public Long expires_in;         //recommended
+        public String refresh_token;    //optional
+        public String scope;            //optional
+        public String error;            //in case of error
+        public String error_description;//in case of error
+        public String error_uri;        //in case of error
+
+        public Boolean isError() {
+            return error != null;
+        }
+
+        public String getErrorMessage() {
+            return error;
+        }
     }
 
     global String getCustomMetadataType() {
@@ -31,6 +47,10 @@ global class ClientCredentialsAuthProvider extends Auth.AuthProviderPluginClass 
 
     global Auth.AuthProviderTokenResponse handleCallback(Map<string,string> authProviderConfiguration, Auth.AuthProviderCallbackState callbackState) {
         TokenResponse tokenResponse = retrieveToken(authProviderConfiguration);
+
+        if (tokenResponse.isError()) {
+            throw new TokenException(tokenResponse.getErrorMessage());
+        }
 
         return new Auth.AuthProviderTokenResponse(
             authProviderConfiguration.get(CMDT_FIELD_PROVIDER_NAME),    // provider
@@ -67,7 +87,7 @@ global class ClientCredentialsAuthProvider extends Auth.AuthProviderPluginClass 
         String access_token_url = config.get(CMDT_FIELD_ACCESS_TOKEN_URL);
         String parameters =   'client_id=' + config.get(CMDT_FIELD_CLIENT_ID)
                             + '&client_secret=' + config.get(CMDT_FIELD_CLIENT_SECRET)
-                            + '&grant_type=client_credentials';
+                            + '&grant_type=' + GRANT_TYPE;
 
         HttpRequest req = new HttpRequest();
         req.setEndpoint(access_token_url);
@@ -79,4 +99,6 @@ global class ClientCredentialsAuthProvider extends Auth.AuthProviderPluginClass 
         HTTPResponse res = http.send(req);
         return (TokenResponse)JSON.deserialize(res.getBody(), TokenResponse.class);
     }
+
+    public class TokenException extends Exception { }
 }
