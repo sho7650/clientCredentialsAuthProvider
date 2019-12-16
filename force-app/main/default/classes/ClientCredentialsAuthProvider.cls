@@ -24,10 +24,6 @@ global class ClientCredentialsAuthProvider extends Auth.AuthProviderPluginClass 
         public Boolean isError() {
             return error != null;
         }
-
-        public String getErrorMessage() {
-            return error;
-        }
     }
 
     global String getCustomMetadataType() {
@@ -49,7 +45,7 @@ global class ClientCredentialsAuthProvider extends Auth.AuthProviderPluginClass 
         TokenResponse tokenResponse = retrieveToken(authProviderConfiguration);
 
         if (tokenResponse.isError()) {
-            throw new TokenException(tokenResponse.getErrorMessage());
+            throw new TokenException(tokenResponse.error);
         }
 
         return new Auth.AuthProviderTokenResponse(
