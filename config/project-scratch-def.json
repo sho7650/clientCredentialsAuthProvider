@@ -1,5 +1,6 @@
 {
   "orgName": "sho company",
   "edition": "Developer",
-  "features": []
+  "features": [],
+  "username": "test-clientcredentials@example.com"
 }
