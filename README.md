@@ -94,9 +94,9 @@ CLIENT_ID='client_id'
 CLIENT_SECRET='client_secret'
 ```
 
-`ENDPOINT` ... call out endpoint URL using by Named Credentials
-`EXECUTION_USER` ... username using connecting to remote site
-`REMOTE_SITE_URL` ... would to access remote site URL
-`ACCESS_TOKEN_URL` ... request access token URL with authorization server
-`CLIENT_ID` ... identify apps
-`CLIENT_SECRET` ... secret key known only to apps and authorization server
+- `ENDPOINT` ... call out endpoint URL using by Named Credentials
+- `EXECUTION_USER` ... username using connecting to remote site
+- `REMOTE_SITE_URL` ... would to access remote site URL
+- `ACCESS_TOKEN_URL` ... request access token URL with authorization server
+- `CLIENT_ID` ... identify apps
+- `CLIENT_SECRET` ... secret key known only to apps and authorization server
