@@ -13,11 +13,13 @@ public class ClientCredentialsAuthProviderTest {
   private static final String ACCESS_TOKEN = 'thisIsTestAccessToken';
   private static final String STATE = 'testState';
 
+  // correct token sample
   private static final String correctJsonToken = '{'+
 '  \"token_type\": \"Bearer\",'+
 '  \"access_token\": \"thisIsTestAccessToken\",'+
 '  \"expires_in\": \"3599\"'+
 '}';
+  // incorrect token sample
   private static final String incorrectJsonToken = '{'+
   '  \"error\": \"invalid_request\",'+
   '  \"error_description\": \"error description\",'+
@@ -26,6 +28,7 @@ public class ClientCredentialsAuthProviderTest {
   private static final Integer correctStatusCode = 200;
   private static final Integer invalidStatusCode = 400;
 
+  // is custom metadata type correct?
   @isTest static void getCustomMetadataTypeTest() {
     final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
     final String actual = provider.getCustomMetadataType();
@@ -45,6 +48,7 @@ public class ClientCredentialsAuthProviderTest {
     return authProviderConfiguration;
   }
 
+  // is callback url correct?
   @isTest static void initiateTest() {
     final Map<String,String> authProviderConfiguration = setupAuthProviderConfig();
     final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
@@ -95,6 +99,8 @@ public class ClientCredentialsAuthProviderTest {
     }
 
   }
+
+  // testing to get a correct refresh token
   @isTest static void refreshTest() {
     final Map<String,String> authProviderConfiguration = setupAuthProviderConfig();
     final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
@@ -109,6 +115,7 @@ public class ClientCredentialsAuthProviderTest {
     System.assertEquals(expected.error, actual.error);
   }
 
+  // is user information correct?
   @isTest static void getUserInfoTest() {
     final Map<String,String> authProviderConfiguration = setupAuthProviderConfig();
     final ClientCredentialsAuthProvider provider = new ClientCredentialsAuthProvider();
